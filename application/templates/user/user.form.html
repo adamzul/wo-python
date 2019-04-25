@@ -1,0 +1,39 @@
+<!-- form start -->
+<form role="form" id="form-main">
+  <div class="box-body">
+      <input type="hidden" class="form-control" id="id" name="id" placeholder="id">
+
+  	<div class="form-group">
+      <label for="nama">nama</label>
+      <input type="text" class="form-control" id="nama" name="nama" placeholder="nama">
+    </div>
+    <div class="form-group">
+      <label for="username">username</label>
+      <input type="text" class="form-control" id="username" name="username" placeholder="username">
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+    </div>
+    <div class="form-group">
+      <label for="role">role</label>
+      <select class="form-control" id="role" name="role"> 
+      	{% for item in role %}
+      	<option value="{{ item.id }}">{{ item.role }}</option>
+		    {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="divisi">divisi</label>
+      <select class="form-control" id="divisi" name="divisi"> 
+      	{% for item in divisi %}
+      	<option value="{{ item.id }}">{{ item.divisi }}</option>
+		    {% endfor %}
+      </select>
+    </div>
+    
+  </div>
+  <!-- /.box-body -->
+
+  
+</form>

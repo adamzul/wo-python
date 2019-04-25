@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block customcss %}
+	<!-- DataTables -->
+	<link rel="stylesheet" href="{{ url_for('static', filename='bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+	<div class="content-wrapper">
+		<!-- Content Header (Page header) -->
+		<section class="content-header">
+			<h1>
+				Fixed Layout
+				<small>Blank example to the fixed layout</small>
+			</h1>
+			<ol class="breadcrumb">
+				<li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+				<li><a href="#">Layout</a></li>
+				<li class="active">Fixed</li>
+			</ol>
+		</section>
+
+		<!-- Main content -->
+		<section class="content">
+			
+			<!-- Default box -->
+			<div class="box">
+				<div class="box-header with-border">
+					<h3 class="box-title">Title</h3>
+
+					<div class="box-tools pull-right">
+						<button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+							<i class="fa fa-minus"></i></button>
+						<button type="button" class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove">
+							<i class="fa fa-times"></i></button>
+					</div>
+				</div>
+				<div class="box-body">
+					<button type="button" class="btn btn-primary" onclick="add_data()" >
+						tambah user
+					</button>
+
+					<button type="button" class="btn btn-primary" onclick="reload_table()" >
+						reload
+					</button>
+					<br>
+					<br>
+					<table id="table" class="table table-bordered table-striped">
+								<thead>
+								<tr>
+									<th>id</th>
+									<th>username</th>
+									<th>role</th>
+									<th>divisi</th>
+									<th>nama</th>
+									<th>action</th>
+								</tr>
+								</thead>
+								<tbody>
+								
+								</tbody>
+								
+							</table>
+				</div>
+
+				<div class="modal fade" id="modal-default">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span></button>
+								<h4 class="modal-title">Default Modal</h4>
+							</div>
+							<div class="modal-body">
+								{% include "user/user.form.html" %}
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+								<button type="button" class="btn btn-primary" id="button-save" onclick="save()">Save</button>
+							</div>
+						</div>
+						<!-- /.modal-content -->
+					</div>
+					<!-- /.modal-dialog -->
+				</div>
+				<!-- /.modal -->
+				<!-- /.box-body -->
+				<div class="box-footer">
+					Footer
+				</div>
+				<!-- /.box-footer-->
+			</div>
+			<!-- /.box -->
+
+		</section>
+		<!-- /.content -->
+	</div>
+	<!-- /.content-wrapper -->
+{% endblock %}
+
+{% block customscript %}
+<script src="{{ url_for('static', filename='bower_components/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+	<script type="text/javascript">
+		var table;
+		var save_method;
+		$(document).ready(function(){
+			// $('#example1').DataTable({
+	 //    'paging'      : true,
+	 //    'lengthChange': true,
+	 //    'searching'   : true,
+	 //    'ordering'    : true,
+	 //    'info'        : true,
+	 //    'autoWidth'   : true
+	 //  });
+
+			//datatables
+			table = $('#table').DataTable({
+					"processing": true, //Feature control the processing indicator.
+					"serverSide": true, //Feature control DataTables' server-side processing mode.
+					"order": [], //Initial no order.
+					// Load data for the table's content from an Ajax source
+					"ajax": {
+							"url": "{{url_for('user.get_data')}}",
+							"type": "POST"
+					},
+					//Set column definition initialisation properties.
+					"columnDefs": [
+							{
+									"targets": [ -1 ], //last column
+									"orderable": false, //set not orderable
+							},
+					],
+			});
+		});
+
+		function reload_table(){
+				table.ajax.reload(null,false); //reload datatable ajax
+		}
+
+		function add_data(){
+			save_method = 'add';
+			$('#form-main')[0].reset(); // reset form on modals
+			$('.form-group').removeClass('has-error'); // clear error class
+			$('.help-block').empty(); // clear error string
+			$('.modal-title').text('Add User'); // Set Title to Bootstrap modal title
+			$('#modal-default').modal('show');
+		}
+
+		function edit_data(id)
+		{
+				save_method = 'update';
+				$('#form-main')[0].reset(); // reset form on modals
+				$('.form-group').removeClass('has-error'); // clear error class
+				$('.help-block').empty(); // clear error string
+				//Ajax Load data from ajax
+				$.ajax({
+						url : "/edit/"+id,
+						type: "GET",
+						dataType: "JSON",
+						success: function(data)
+						{
+								$.each(data, function(index, value){
+										$('[name="'+index+'"]').val(value);
+								})
+								$('#modal-default').modal('show'); // show bootstrap modal when complete loaded
+								$('.modal-title').text('Edit Arah'); // Set title to Bootstrap modal title
+						},
+						error: function (data)
+						{
+								console.log(data);
+								alert('Error get data from ajax');
+						}
+				});
+		}
+
+
+		function save()
+		{
+				$('#button-save').text('saving...'); //change button text
+				$('#button-save').attr('disabled',true); //set button disable
+				var url;
+				if(save_method == 'add') {
+						url = "{{url_for('user.create')}}";
+				} else {
+						url = "{{url_for('user.update')}}";
+				}
+				
+				// ajax adding data to database
+				$.ajax({
+						url : url,
+						type: "POST",
+						data: $('#form-main').serialize(),
+						dataType: "JSON",
+						success: function(data)
+						{
+								if(data.status) //if success close modal and reload ajax table
+								{
+										$('#modal-default').modal('hide');
+										reload_table();
+								}
+								else
+								{
+										console.log(data);
+										if(data.inputerror != null) {
+												for (var i = 0; i < data.inputerror.length; i++) {
+														$('[name="' + data.inputerror[i] + '"]').parent().addClass('has-error'); //select parent twice to select div form-group class and add has-error class
+														$('[name="' + data.inputerror[i] + '"]').closest('div').find('.help-block').text(data.error_string[i]); //select span help-block class set text error string
+												}
+										}
+										if(data.massage != null){
+												alert(data.massage);
+										}
+								}
+								$('#button-save').text('save'); //change button text
+								$('#button-save').attr('disabled',false); //set button enable
+						},
+						error: function (data)
+						{
+								conlose.log(data);
+								alert('Error adding / update data');
+								$('#button-save').text('save'); //change button text
+								$('#button-save').attr('disabled',false); //set button enable
+						}
+				});
+		}
+	</script>
+{% endblock %}
