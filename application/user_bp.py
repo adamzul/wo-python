@@ -13,11 +13,12 @@ import application.models.role_table as role_table
 from sqlalchemy import create_engine
 
 from datetime import date
+import hashlib 
 
 from application.models.user import User
 from application.models.role import Role
 from application.models.divisi import Divisi
-from application.models.base import Session, engine, Base
+from application.models.base import Session_db, engine, Base
 
 from pprint import pprint
 from inspect import getmembers
@@ -27,7 +28,7 @@ table_field = ['id', "getattr(role, id)", 'username', 'divisi', 'nama']
 @bp.route('/')
 def index():
 	Base.metadata.create_all(engine)
-	session = Session()
+	session = Session_db()
 	role = session.query(Role).all()
 	divisi = session.query(Divisi).all()
 	return render_template('user/user.index.html', role = role, divisi = divisi)
@@ -37,7 +38,7 @@ def get_data():
 	# engine = create_engine('mysql+pymysql://root:@localhost/wo')
 	# mysql_data = user_table.get_all()
 	Base.metadata.create_all(engine)
-	session = Session()
+	session = Session_db()
 	mysql_data = session.query(User).join(Role, Divisi).all()
 	data = []
 	for x in mysql_data:
@@ -66,8 +67,8 @@ def get_data():
 @bp.route('/edit/<id>', methods = ['GET'])
 def edit(id):
 	Base.metadata.create_all(engine)
-	session = Session()
-	user = session.query(User).filter_by(id=id).one()
+	session = Session_db()
+	user = session.query(User).filter_by(id=id).first()
 	# pprint(user.__dict__)
 	data = user.__dict__
 	data.pop('_sa_instance_state')
@@ -82,9 +83,10 @@ def edit(id):
 def create():
 	if request.method == 'POST':
 		Base.metadata.create_all(engine)
-		session = Session()
+		session = Session_db()
 		username = request.form['username']
-		password = request.form['password']
+		password =  hashlib.sha256(request.form['password'].encode()) 
+		password = password.hexdigest()
 		role = request.form['role']
 		divisi = request.form['divisi']
 		nama = request.form['nama']
@@ -135,10 +137,10 @@ def update():
 
 
 	Base.metadata.create_all(engine)
-	session = Session()
+	session = Session_db()
 	id = request.form['id']
 
-	user = session.query(User).filter_by(id=id).one()
+	user = session.query(User).filter_by(id=id).first()
 
 	user.username = request.form['username']
 	user.password = request.form['password']
@@ -156,11 +158,11 @@ def update():
 	return json.dumps({"status": True})
 
 
-@bp.route('/<int:id>/delete', methods=('POST',))
-@login_required
+@bp.route('/delete/<int:id>')
+# @login_required
 def delete(id):
-	get_post(id)
-	db = get_db()
-	db.execute('DELETE FROM post WHERE id = ?', (id,))
-	db.commit()
-	return redirect(url_for('blog.index'))
+	Base.metadata.create_all(engine)
+	session = Session_db()
+	session.query(User).filter_by(id = id).delete()
+	session.commit()
+	return json.dumps({"status": True})
