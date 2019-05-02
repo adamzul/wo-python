@@ -1,5 +1,5 @@
 import os
-from . import user_bp
+from application.user_bp import User_BP
 from . import auth
 
 from flask import Flask
@@ -34,8 +34,8 @@ def create_app(test_config=None):
     db.init_app(app)
 
     app.register_blueprint(auth.bp)
-    
-    app.register_blueprint(user_bp.bp)
+    temp = User_BP()
+    app.register_blueprint(temp.bp)
     app.add_url_rule('/', endpoint='index')
 
 
